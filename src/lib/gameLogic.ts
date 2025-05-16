@@ -34,6 +34,11 @@ let animationFrameId: number | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let canvas: HTMLCanvasElement | null = null;
 
+// 触摸控制状态
+let touchDirectionX = 0; // -1: 左, 0: 不动, 1: 右
+let touchDirectionY = 0; // -1: 上, 0: 不动, 1: 下
+let touchShooting = false; // 是否触摸射击按钮
+
 // --- 类定义 ---
 
 // 游戏对象基类
@@ -892,7 +897,6 @@ function handleKeyboardInput() {
     return; // 如果是测试模式，不处理键盘输入
   }
 
-  // 正常处理键盘输入
   // 确保我们使用输入映射处理所有可能的键
   const keyMap = {
     up: ["ArrowUp", "arrowup", "w", "W"],
@@ -923,15 +927,46 @@ function handleKeyboardInput() {
     }
   };
 
-  // 尝试各个方向的移动
+  // 处理键盘输入
   tryMove("up", 0, -player.speed);
   tryMove("down", 0, player.speed);
   tryMove("left", -player.speed, 0);
   tryMove("right", player.speed, 0);
 
-  // 射击处理
+  // 处理触摸输入
+  if (touchDirectionX !== 0 || touchDirectionY !== 0) {
+    // 确定主方向
+    if (Math.abs(touchDirectionX) > Math.abs(touchDirectionY)) {
+      // 水平主导
+      if (touchDirectionX > 0) {
+        player.direction = "right";
+        player.move(player.speed, 0);
+      } else {
+        player.direction = "left";
+        player.move(-player.speed, 0);
+      }
+    } else {
+      // 垂直主导
+      if (touchDirectionY > 0) {
+        player.direction = "down";
+        player.move(0, player.speed);
+      } else {
+        player.direction = "up";
+        player.move(0, -player.speed);
+      }
+    }
+  }
+
+  // 射击处理 - 键盘
   if (keyMap.shoot.some((key) => keysPressed[key]) && player) {
     player.shoot();
+  }
+
+  // 射击处理 - 触摸
+  if (touchShooting && player) {
+    player.shoot();
+    // 重置状态，防止连续射击
+    touchShooting = false;
   }
 }
 
@@ -1097,4 +1132,14 @@ export function pauseGame() {
   } else if (gameState === "paused") {
     gameState = "playing";
   }
+}
+
+// 处理触摸控制
+export function handleTouchDirectionChange(dirX: number, dirY: number) {
+  touchDirectionX = dirX;
+  touchDirectionY = dirY;
+}
+
+export function handleTouchShoot(shooting: boolean) {
+  touchShooting = shooting;
 }
