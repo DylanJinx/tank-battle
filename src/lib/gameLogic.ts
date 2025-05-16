@@ -893,8 +893,6 @@ function handleKeyboardInput() {
   }
 
   // 正常处理键盘输入
-  let hasMoved = false;
-
   // 确保我们使用输入映射处理所有可能的键
   const keyMap = {
     up: ["ArrowUp", "arrowup", "w", "W"],
@@ -920,10 +918,7 @@ function handleKeyboardInput() {
         // 先设置方向
         player.direction = direction;
         // 然后尝试移动
-        const moved = player.move(dx, dy);
-        if (moved) {
-          hasMoved = true;
-        }
+        player.move(dx, dy);
       }
     }
   };
