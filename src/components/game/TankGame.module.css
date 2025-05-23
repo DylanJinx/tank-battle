@@ -7,6 +7,8 @@
   width: 100%;
   max-width: 840px;
   margin: 0 auto;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 .gameTitle {
@@ -18,12 +20,17 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-align: center;
 }
 
 .gameWrapper {
   position: relative;
   width: 100%;
   max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .gameCanvas {
@@ -35,6 +42,8 @@
   width: 100%;
   height: auto;
   display: block;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .gameCanvas:hover {
@@ -49,6 +58,18 @@
   margin-bottom: 15px;
   font-size: 16px;
   color: #fff;
+}
+
+.debugInfo {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  width: 100%;
 }
 
 .stat {
@@ -118,22 +139,34 @@
 /* 触摸控制样式 */
 .touchControls {
   position: absolute;
-  top: 0;
+  bottom: 20px;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: auto;
   pointer-events: none;
-  z-index: 10;
+  z-index: 100;
   user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.touchControls.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .joystickContainer {
-  position: absolute;
-  bottom: 50px;
-  left: 50px;
   width: 120px;
   height: 120px;
   pointer-events: auto;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .joystickBase {
@@ -142,7 +175,7 @@
   height: 100%;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,15 +185,12 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 0 10px rgba(0, 113, 227, 0.5);
 }
 
 .actionButtons {
-  position: absolute;
-  bottom: 50px;
-  right: 50px;
   pointer-events: auto;
 }
 
@@ -179,6 +209,7 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
+  pointer-events: auto;
 }
 
 .shootButton:active {
@@ -201,15 +232,8 @@
   }
 
   .joystickContainer {
-    bottom: 30px;
-    left: 30px;
     width: 100px;
     height: 100px;
-  }
-
-  .actionButtons {
-    bottom: 30px;
-    right: 30px;
   }
 
   .shootButton {
@@ -222,6 +246,7 @@
 @media (max-width: 480px) {
   .gameTitle {
     font-size: 28px;
+    margin-bottom: 10px;
   }
 
   .stat {
@@ -230,8 +255,6 @@
   }
 
   .joystickContainer {
-    bottom: 20px;
-    left: 20px;
     width: 80px;
     height: 80px;
   }
@@ -241,14 +264,68 @@
     height: 40px;
   }
 
-  .actionButtons {
-    bottom: 20px;
-    right: 20px;
-  }
-
   .shootButton {
     width: 60px;
     height: 60px;
     font-size: 14px;
+  }
+
+  .gameWrapper {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .restartBtn {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  /* 调整移动设备上的控制器位置 */
+  .touchControls {
+    bottom: 10px;
+    padding: 0 10px;
+  }
+}
+
+/* 适配横屏模式 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .gameTitle {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+
+  .gameContainer {
+    gap: 10px;
+  }
+
+  .gameStats {
+    margin-bottom: 5px;
+  }
+
+  .touchControls {
+    bottom: 5px;
+  }
+
+  .joystickContainer {
+    width: 70px;
+    height: 70px;
+  }
+
+  .joystickHandle {
+    width: 30px;
+    height: 30px;
+  }
+
+  .shootButton {
+    width: 50px;
+    height: 50px;
+    font-size: 12px;
+  }
+
+  .restartBtn {
+    padding: 8px 16px;
+    font-size: 12px;
+    margin-top: 5px;
   }
 }

@@ -21,18 +21,115 @@ const TankGame = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [joystickActive, setJoystickActive] = useState(false);
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [debugInfo, setDebugInfo] = useState({
+    isMobile: false,
+    touchDevice: false,
+    smallScreen: false,
+    screenWidth: 0,
+  });
+
+  // 调整画布尺寸
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      const gameWrapper = document.querySelector(`.${styles.gameWrapper}`);
+      if (gameWrapper) {
+        const wrapperWidth = Math.min(window.innerWidth - 30, 800);
+        const isSmallScreen = window.innerWidth <= 768;
+
+        // 根据设备类型调整高度比例
+        const heightRatio = isSmallScreen ? 0.7 : 0.6;
+        const wrapperHeight = window.innerHeight * heightRatio;
+
+        // 保持4:3的宽高比
+        let width = wrapperWidth;
+        let height = (wrapperWidth * 3) / 4;
+
+        // 如果高度超出了容器高度，则以高度为基准
+        if (height > wrapperHeight) {
+          height = wrapperHeight;
+          width = (height * 4) / 3;
+        }
+
+        // 确保尺寸不小于最小值
+        width = Math.max(width, isSmallScreen ? 280 : 320);
+        height = Math.max(height, isSmallScreen ? 210 : 240);
+
+        setCanvasSize({
+          width: Math.floor(width),
+          height: Math.floor(height),
+        });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener("resize", updateCanvasSize);
+
+    // 添加方向变化事件监听
+    window.addEventListener("orientationchange", updateCanvasSize);
+
+    return () => {
+      window.removeEventListener("resize", updateCanvasSize);
+      window.removeEventListener("orientationchange", updateCanvasSize);
+    };
+  }, []);
 
   // 检测是否为移动设备
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768 || "ontouchstart" in window);
+      const isTouchDevice =
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        (navigator as any).msMaxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+      const shouldBeMobile = isTouchDevice || isSmallScreen;
+
+      setIsMobile(shouldBeMobile);
+      setDebugInfo({
+        isMobile: shouldBeMobile,
+        touchDevice: isTouchDevice,
+        smallScreen: isSmallScreen,
+        screenWidth: window.innerWidth,
+      });
+
+      // 如果是移动设备，调整页面布局
+      if (shouldBeMobile) {
+        // 使用更温和的方式处理滚动
+        document.body.style.overflow = "hidden";
+        document.body.style.touchAction = "none"; // 阻止默认的触摸行为
+        document.body.style.position = "fixed";
+        document.body.style.width = "100%";
+        document.body.style.height = "100%";
+
+        // 防止iOS Safari的橡皮筋效果
+        document.documentElement.style.overflow = "hidden";
+        document.documentElement.style.height = "100%";
+      } else {
+        document.body.style.overflow = "";
+        document.body.style.touchAction = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.height = "";
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.height = "";
+      }
     };
 
     checkMobile();
     window.addEventListener("resize", checkMobile);
+    window.addEventListener("orientationchange", checkMobile);
 
     return () => {
       window.removeEventListener("resize", checkMobile);
+      window.removeEventListener("orientationchange", checkMobile);
+      // 清理样式
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.height = "";
     };
   }, []);
 
@@ -195,49 +292,62 @@ const TankGame = () => {
         </div>
       </div>
 
+      {/* 调试信息，仅在开发环境显示 */}
+      {process.env.NODE_ENV === "development" && (
+        <div className={styles.debugInfo}>
+          <div>移动设备: {debugInfo.isMobile ? "是" : "否"}</div>
+          <div>触摸设备: {debugInfo.touchDevice ? "是" : "否"}</div>
+          <div>小屏幕: {debugInfo.smallScreen ? "是" : "否"}</div>
+          <div>屏幕宽度: {debugInfo.screenWidth}px</div>
+          <div>
+            画布尺寸: {canvasSize.width}x{canvasSize.height}
+          </div>
+        </div>
+      )}
+
       <div className={styles.gameWrapper}>
         <canvas
           ref={canvasRef}
           id="gameCanvas"
-          width={800}
-          height={600}
+          width={canvasSize.width}
+          height={canvasSize.height}
           className={styles.gameCanvas}
         />
 
-        {isMobile && (
-          <>
-            {/* 触摸控制器 */}
-            <div className={styles.touchControls}>
-              {/* 左侧摇杆 */}
+        {/* 移动设备控制器 */}
+        <div
+          className={`${styles.touchControls} ${
+            isMobile ? styles.visible : ""
+          }`}
+        >
+          {/* 左侧摇杆 */}
+          <div
+            className={styles.joystickContainer}
+            ref={joystickRef}
+            onMouseDown={handleJoystickStart}
+            onTouchStart={handleJoystickStart}
+          >
+            <div className={styles.joystickBase}>
               <div
-                className={styles.joystickContainer}
-                ref={joystickRef}
-                onMouseDown={handleJoystickStart}
-                onTouchStart={handleJoystickStart}
-              >
-                <div className={styles.joystickBase}>
-                  <div
-                    className={styles.joystickHandle}
-                    style={{
-                      transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* 右侧射击按钮 */}
-              <div className={styles.actionButtons}>
-                <button
-                  className={styles.shootButton}
-                  onMouseDown={handleShootButton}
-                  onTouchStart={handleShootButton}
-                >
-                  射击
-                </button>
-              </div>
+                className={styles.joystickHandle}
+                style={{
+                  transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`,
+                }}
+              />
             </div>
-          </>
-        )}
+          </div>
+
+          {/* 右侧射击按钮 */}
+          <div className={styles.actionButtons}>
+            <button
+              className={styles.shootButton}
+              onMouseDown={handleShootButton}
+              onTouchStart={handleShootButton}
+            >
+              射击
+            </button>
+          </div>
+        </div>
       </div>
 
       <button className={styles.restartBtn} onClick={handleRestart}>
