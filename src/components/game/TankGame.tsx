@@ -31,6 +31,9 @@ const TankGame = () => {
 
   // 调整画布尺寸
   useEffect(() => {
+    // 确保在浏览器环境中运行
+    if (typeof window === "undefined") return;
+
     const updateCanvasSize = () => {
       const gameWrapper = document.querySelector(`.${styles.gameWrapper}`);
       if (gameWrapper) {
@@ -62,10 +65,12 @@ const TankGame = () => {
       }
     };
 
-    updateCanvasSize();
-    window.addEventListener("resize", updateCanvasSize);
+    // 使用requestAnimationFrame确保DOM已经准备好
+    requestAnimationFrame(() => {
+      updateCanvasSize();
+    });
 
-    // 添加方向变化事件监听
+    window.addEventListener("resize", updateCanvasSize);
     window.addEventListener("orientationchange", updateCanvasSize);
 
     return () => {
@@ -77,6 +82,9 @@ const TankGame = () => {
   // 检测是否为移动设备
   useEffect(() => {
     const checkMobile = () => {
+      // 确保在浏览器环境中运行
+      if (typeof window === "undefined") return;
+
       const isTouchDevice =
         "ontouchstart" in window ||
         navigator.maxTouchPoints > 0 ||
@@ -115,42 +123,60 @@ const TankGame = () => {
       }
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    window.addEventListener("orientationchange", checkMobile);
+    // 确保在浏览器环境中运行
+    if (typeof window !== "undefined") {
+      checkMobile();
+      window.addEventListener("resize", checkMobile);
+      window.addEventListener("orientationchange", checkMobile);
 
-    return () => {
-      window.removeEventListener("resize", checkMobile);
-      window.removeEventListener("orientationchange", checkMobile);
-      // 清理样式
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.style.height = "";
-      document.documentElement.style.overflow = "";
-      document.documentElement.style.height = "";
-    };
+      return () => {
+        window.removeEventListener("resize", checkMobile);
+        window.removeEventListener("orientationchange", checkMobile);
+        // 清理样式
+        document.body.style.overflow = "";
+        document.body.style.touchAction = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.height = "";
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.height = "";
+      };
+    }
   }, []);
 
   useEffect(() => {
+    // 确保在浏览器环境中运行
+    if (typeof window === "undefined") return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // 初始化游戏
-    initGame(canvas);
+    // 使用setTimeout确保DOM已完全渲染
+    const initTimer = setTimeout(() => {
+      try {
+        // 初始化游戏
+        initGame(canvas);
 
-    // 启动游戏循环
-    startGameLoop();
+        // 启动游戏循环
+        startGameLoop();
+      } catch (error) {
+        console.error("游戏初始化失败:", error);
+      }
+    }, 100);
 
     // 定时更新UI数据
     const statsInterval = setInterval(() => {
-      setFps(getCurrentFps());
-      setEnemyCount(getEnemyCount());
+      try {
+        setFps(getCurrentFps());
+        setEnemyCount(getEnemyCount());
+      } catch (error) {
+        console.error("更新游戏状态失败:", error);
+      }
     }, 500);
 
     // 在组件卸载时清理
     return () => {
+      clearTimeout(initTimer);
       stopGameLoop();
       clearInterval(statsInterval);
     };
@@ -221,6 +247,9 @@ const TankGame = () => {
 
   // 处理全局鼠标/触摸移动和结束事件
   useEffect(() => {
+    // 确保在浏览器环境中运行
+    if (typeof window === "undefined") return;
+
     const handleGlobalMove = (e: TouchEvent | MouseEvent) => {
       if (joystickActive) {
         const syntheticEvent = e as any;
@@ -236,7 +265,7 @@ const TankGame = () => {
 
     window.addEventListener("mousemove", handleGlobalMove);
     window.addEventListener("mouseup", handleGlobalEnd);
-    window.addEventListener("touchmove", handleGlobalMove);
+    window.addEventListener("touchmove", handleGlobalMove, { passive: false });
     window.addEventListener("touchend", handleGlobalEnd);
 
     return () => {

@@ -10,6 +10,7 @@ const TankGame = dynamic(() => import("../components/game/TankGame"), {
       游戏加载中...
     </div>
   ),
+  ssr: false, // 禁用服务器端渲染
 });
 
 export default function Home() {
